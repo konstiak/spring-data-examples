@@ -23,7 +23,9 @@ import lombok.experimental.Wither;
 import java.time.Period;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.springframework.data.annotation.AccessType;
 import org.springframework.data.annotation.AccessType.Type;
@@ -44,6 +46,8 @@ public class LegoSet {
 	private @Id int id;
 	private String name;
 	private @Transient Period minimumAge, maximumAge;
+	@Column(keyColumn = "lego_set_id")
+	private Set<ColorRef> colors = new HashSet<>();
 
 	/**
 	 * Since Manuals are part of a {@link LegoSet} and only make sense inside a {@link LegoSet} it is considered part of
@@ -92,5 +96,9 @@ public class LegoSet {
 
 		Model model = new Model(name, description);
 		models.put(name, model);
+	}
+
+	public void addColor(Color color) {
+		colors.add(ColorRef.builder().colorId(color.getId()).build());
 	}
 }

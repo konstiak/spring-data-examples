@@ -44,19 +44,28 @@ import org.springframework.test.context.junit4.SpringRunner;
 public class AggregateTests {
 
 	@Autowired LegoSetRepository repository;
+	@Autowired ColorRepository colorRepo;
 
 	@Test
 	public void exerciseSomewhatComplexEntity() {
+
+		Color blue = Color.builder().name("blue").build();
+		Color red = Color.builder().name("red").build();
+
+		colorRepo.save(blue);
+		colorRepo.save(red);
 
 		LegoSet smallCar = createLegoSet("Small Car 01", 5, 12);
 		smallCar.setManual(new Manual("Just put all the pieces together in the right order", "Jens Schauder"));
 		smallCar.addModel("suv", "SUV with sliding doors.");
 		smallCar.addModel("roadster", "Slick red roadster.");
+		smallCar.addColor(blue);
+		smallCar.addColor(red);
 
 		repository.save(smallCar);
 		Iterable<LegoSet> legoSets = repository.findAll();
 		Output.list(legoSets, "Original LegoSet");
-		checkLegoSets(legoSets, "Just put all the pieces together in the right order", 2);
+		checkLegoSets(legoSets, "Just put all the pieces together in the right order", 2, 2);
 
 		smallCar.getManual().setText("Just make it so it looks like a car.");
 		smallCar.addModel("pickup", "A pickup truck with some tools in the back.");
@@ -64,14 +73,14 @@ public class AggregateTests {
 		repository.save(smallCar);
 		legoSets = repository.findAll();
 		Output.list(legoSets, "Updated");
-		checkLegoSets(legoSets, "Just make it so it looks like a car.", 3);
+		checkLegoSets(legoSets, "Just make it so it looks like a car.", 3, 2);
 
 		smallCar.setManual(new Manual("One last attempt: Just build a car! Ok?", "Jens Schauder"));
 
 		repository.save(smallCar);
 		legoSets = repository.findAll();
 		Output.list(legoSets, "Manual replaced");
-		checkLegoSets(legoSets, "One last attempt: Just build a car! Ok?", 3);
+		checkLegoSets(legoSets, "One last attempt: Just build a car! Ok?", 3, 2);
 
 	}
 
@@ -124,12 +133,14 @@ public class AggregateTests {
 		return smallCar;
 	}
 
-	private void checkLegoSets(Iterable<LegoSet> legoSets, String manualText, int numberOfModels) {
+	private void checkLegoSets(Iterable<LegoSet> legoSets, String manualText, int numberOfModels, int numberOfColors) {
 
 		assertThat(legoSets) //
 				.extracting( //
 						ls -> ls.getManual().getText(), //
-						ls -> ls.getModels().size()) //
-				.containsExactly(new Tuple(manualText, numberOfModels));
+						ls -> ls.getModels().size(),
+						ls -> ls.getColors().size()
+				) //
+				.containsExactly(new Tuple(manualText, numberOfModels, numberOfColors));
 	}
 }
